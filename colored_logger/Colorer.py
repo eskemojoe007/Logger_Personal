@@ -106,15 +106,43 @@ def add_coloring_to_emit_ansi(fn):
 def getLogger(name):
     return logging.getLogger(name)
 
-def customLogger(name):
+# def customLogger(name):
+#     set()
+#     logger = logging.getLogger(name)
+#     if not len(logger.handlers):
+#         logger_handler = logging.StreamHandler()
+#         logger_handler.setFormatter(MyFormatter("%(message)s"))
+#         logger.addHandler(logger_handler)
+#     logger.setLevel("DEBUG")
+#
+#     return logger
+
+def customLogger(name,fn=None,file_format='%(asctime)s - %(levelname)s - %(message)s',mode='a'):
     set()
     logger = logging.getLogger(name)
-    if not len(logger.handlers):
-        logger_handler = logging.StreamHandler()
-        logger_handler.setFormatter(MyFormatter("%(message)s"))
-        logger.addHandler(logger_handler)
-    logger.setLevel("DEBUG")
 
+    if len(logger.handlers) == 0:
+        stream_handler = logging.StreamHandler()
+        stream_handler.setFormatter(MyFormatter("%(message)s"))
+
+        if not fn is None:
+            fh = logging.FileHandler(fn,mode=mode)
+            fh.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+            logger.addHandler(fh)
+        logger.addHandler(stream_handler)
+    else:
+
+        fhs = [isinstance(handler,logging.FileHandler) for handler in logger.handlers]
+        shs = [isinstance(handler,logging.FileHandler) for handler in logger.handlers]
+
+        print(fhs,shs)
+
+
+    # if not len(logger.handlers):
+    #     logger_handler = logging.StreamHandler()
+    #     logger_handler.setFormatter(MyFormatter("%(message)s"))
+    #     logger.addHandler(logger_handler)
+    logger.setLevel("DEBUG")
     return logger
 
 def set():
@@ -150,7 +178,7 @@ class MyFormatter(logging.Formatter):
         record.msg = self.Create_Columns(form,widths,[record.msg],["[%8s]"%record.levelname])
 
         #Return basic formatter
-        return super(MyFormatter,self).format(record)
+        return super().format(record)
 
     def Create_Columns(self,format_str,widths,*columns):
         '''
