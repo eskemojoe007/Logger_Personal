@@ -117,7 +117,9 @@ def getLogger(name):
 #
 #     return logger
 
-def customLogger(name,fn=None,file_format='%(asctime)s - %(levelname)s - %(message)s',mode='a'):
+def customLogger(name,fn=None,
+    file_format='%(asctime)s - %(levelname)s - %(message)s',
+    mode='a',level='DEBUG'):
     set()
     logger = logging.getLogger(name)
 
@@ -130,19 +132,8 @@ def customLogger(name,fn=None,file_format='%(asctime)s - %(levelname)s - %(messa
             fh.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
             logger.addHandler(fh)
         logger.addHandler(stream_handler)
-    else:
 
-        fhs = [isinstance(handler,logging.FileHandler) for handler in logger.handlers]
-        shs = [isinstance(handler,logging.FileHandler) for handler in logger.handlers]
-
-        print(fhs,shs)
-
-
-    # if not len(logger.handlers):
-    #     logger_handler = logging.StreamHandler()
-    #     logger_handler.setFormatter(MyFormatter("%(message)s"))
-    #     logger.addHandler(logger_handler)
-    logger.setLevel("DEBUG")
+    logger.setLevel(level)
     return logger
 
 def set():
