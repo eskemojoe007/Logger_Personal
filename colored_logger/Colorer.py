@@ -2,6 +2,7 @@ import logging
 import textwrap
 import itertools
 import platform
+import six
 '''
 Functions below: add_Coloring
 Author: http://stackoverflow.com/questions/384076/how-can-i-color-python-logging-output
@@ -208,8 +209,13 @@ class MyFormatter(logging.Formatter):
 
             #Actually wrap and creat the string to return...stolen from internet
             lines=[textwrap.wrap(elt, width=num, subsequent_indent=ind) for elt,num,ind in zip(row,widths,sub)]
-            for line in itertools.zip_longest(*lines,fillvalue=''):
-                result.append(format_str.format(width=widths,row=line))
+
+            if six.PY2:
+                for line in itertools.izip_longest(*lines,fillvalue=''):
+                    result.append(format_str.format(width=widths,row=line))
+            elif six.PY3:
+                for line in itertools.zip_longest(*lines,fillvalue=''):
+                    result.append(format_str.format(width=widths,row=line))
         return '\n'.join(result)
 
 
