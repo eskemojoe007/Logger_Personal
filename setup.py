@@ -8,4 +8,7 @@ setup(name='colored_logger',
       author_email='David.Folkner@gmail.com',
       license='MIT',
       packages=['colored_logger'],
+      install_requires=[
+        'six'
+        ]
       zip_safe=False)
