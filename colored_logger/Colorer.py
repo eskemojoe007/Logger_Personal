@@ -155,8 +155,57 @@ MyFormatter class
 Adapted from: http://stackoverflow.com/questions/6847862/how-to-change-the-format-of-logged-messages-temporarily-in-python
               http://stackoverflow.com/questions/3096402/python-string-formatter-for-paragraphs
 Authors: Vinay Sajip, unutbu
+
+Using this formatter makes output look like:
+TEXT TEXT TEXT TEXT [CRITICAL]
+TEXT TEXT TEXT TEXT
+
+Where width is dymanically taken from the terminal width.
+
+A couple of nuanced points, white space at the beginning of the message is perserved throughout
+the rest of the line wrapping.  For example logger.debug('\tThis is a cool message')
+would result in
+
+    This is a cool [  DEBUG]
+    message
+
+Tabs in the rest of the text are ignored (with one exception below). For example
+logger.debug('\tThis is a cool \tmessage') is still just
+
+    This is a cool [  DEBUG]
+    message
+
+
+New line commands are preserved, and the spacing for the first line is used
+for line wrapping.  For example logger.debug('\tThis\nis\na\ncool\nmessage')
+
+    This         [  DEBUG]
+    is
+    a
+    cool
+    message
+
+Whitespace after the \n is preserved for the first wrapped line...non-ideal, but
+its what happens.  For example logger.debug('\tThis is a cool message\n\tSecond cool message long')
+
+    This is a cool [  DEBUG]
+    message
+        Second
+    cool message
+    long
+
+It is not recommended to us \n with whitespace afterwards.
+For example logger.debug('\tThis is a cool message\nSecond cool message long')
+
+    This is a cool [  DEBUG]
+    message
+    Second cool
+    message long
+
 '''
 class MyFormatter(logging.Formatter):
+
+
 
     #This function overwrites logging.Formatter.format
     #We conver the msg into the overall format we want to see
@@ -170,7 +219,7 @@ class MyFormatter(logging.Formatter):
         record.msg = self.Create_Columns(form,widths,[record.msg],["[%8s]"%record.levelname])
 
         #Return basic formatter
-        return super().format(record)
+        return super(MyFormatter,self).format(record)
 
     def Create_Columns(self,format_str,widths,*columns):
         '''
@@ -207,8 +256,25 @@ class MyFormatter(logging.Formatter):
                 else:
                     sub.append("")
 
+            # Per text wrap perserving the \n should be done with splitlines
+            row = [x.splitlines() for x in row]
+            lines = []
+            for elt,num,ind in zip(row,widths,sub):
+                lt = []
+
+                for i,e in enumerate(elt):
+
+                    #Only set init_indent for non-first lines
+                    if i==0:
+                        init = ''
+                    else:
+                        init = ind
+                    lt.extend(textwrap.wrap(e, width=num, initial_indent= init,subsequent_indent=ind))
+
+                lines.append(lt)
+                
             #Actually wrap and creat the string to return...stolen from internet
-            lines=[textwrap.wrap(elt, width=num, subsequent_indent=ind) for elt,num,ind in zip(row,widths,sub)]
+            # lines=[textwrap.wrap(elt, width=num, subsequent_indent=ind) for elt,num,ind in zip(row,widths,sub)]
 
             if six.PY2:
                 for line in itertools.izip_longest(*lines,fillvalue=''):
