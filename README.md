@@ -8,8 +8,16 @@ mind that `'root'` can be any name you like, but root is generally the norm.
 You can change the logging level by calling `logger.setLevel('INFO')`, default is
 `'DEBUG'`.  You need to use all caps and a logging paramter (DEBUG,INFO,WARNING,ERROR,CRITICAL)
 
-## Usage (PIPENV)
-in the pipenv of your local file just use:
+## Installation
+There are many ways to install this repository.  You can clone and install locally, or just directly from Git.  It is not registered with pip just yet.  
+
+#### Method 1 - Install using pipenv from git
+```
+pipenv install git+https://github.com/eskemojoe007/colored_logger#egg=colored_logger
+```
+
+#### Method 2 - Install using pipenv from cloned repo
+Clone the repository to a local area then do
 ```
 pipenv install -e <PATH TO FOLDER>
 ```
