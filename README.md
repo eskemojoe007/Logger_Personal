@@ -62,7 +62,7 @@ logger.debug('This is how line wrap works for very long lines, note that the '
     'width of the terminal is creating the length of the line wrap.')
 ```
 
-![basic_wrap](https://user-images.githubusercontent.com/22135005/40120452-38dcc3f6-58ed-11e8-8897-dd812ebac5c2.png
+![basic_wrap](https://user-images.githubusercontent.com/22135005/40120452-38dcc3f6-58ed-11e8-8897-dd812ebac5c2.png)
 
 #### Initial spacing
 The initial space before the line will be preserved when wrapping
@@ -71,7 +71,7 @@ The initial space before the line will be preserved when wrapping
 logger.debug('\tThis is how line wrap works for very long lines, note that the '
     'width of the terminal is creating the length of the line wrap.')
 ```
-![tab_wrap](https://user-images.githubusercontent.com/22135005/40120485-4f278164-58ed-11e8-8656-e6b7c7bcb977.png
+![tab_wrap](https://user-images.githubusercontent.com/22135005/40120485-4f278164-58ed-11e8-8656-e6b7c7bcb977.png)
 
 Spacing in the middle of lines is removed and replaced with spaces.
 
