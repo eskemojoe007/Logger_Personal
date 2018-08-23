@@ -11,6 +11,8 @@ Downloaded 2/21/14
 Edited by D. Folkner to change some of the colors and how it is output.
 '''
 # now we patch Python code to add color support to logging.StreamHandler
+
+
 def add_coloring_to_emit_windows(fn):
         # add methods we need to the class
     def _out_handle(self):
@@ -28,81 +30,83 @@ def add_coloring_to_emit_windows(fn):
     setattr(logging.StreamHandler, '_set_color', _set_color)
 
     def new(*args):
-        FOREGROUND_BLUE      = 0x0001 # text color contains blue.
-        FOREGROUND_GREEN     = 0x0002 # text color contains green.
-        FOREGROUND_RED       = 0x0004 # text color contains red.
-        FOREGROUND_INTENSITY = 0x0008 # text color is intensified.
-        FOREGROUND_WHITE     = FOREGROUND_BLUE|FOREGROUND_GREEN |FOREGROUND_RED
-       # winbase.h
+        FOREGROUND_BLUE = 0x0001  # text color contains blue.
+        FOREGROUND_GREEN = 0x0002  # text color contains green.
+        FOREGROUND_RED = 0x0004  # text color contains red.
+        FOREGROUND_INTENSITY = 0x0008  # text color is intensified.
+        FOREGROUND_WHITE = FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED
+        # winbase.h
         STD_INPUT_HANDLE = -10
         STD_OUTPUT_HANDLE = -11
         STD_ERROR_HANDLE = -12
 
         # wincon.h
-        FOREGROUND_BLACK     = 0x0000
-        FOREGROUND_BLUE      = 0x0001
-        FOREGROUND_GREEN     = 0x0002
-        FOREGROUND_CYAN      = 0x0003
-        FOREGROUND_RED       = 0x0004
-        FOREGROUND_MAGENTA   = 0x0005
-        FOREGROUND_YELLOW    = 0x0006
-        FOREGROUND_GREY      = 0x0007
-        FOREGROUND_INTENSITY = 0x0008 # foreground color is intensified.
+        FOREGROUND_BLACK = 0x0000
+        FOREGROUND_BLUE = 0x0001
+        FOREGROUND_GREEN = 0x0002
+        FOREGROUND_CYAN = 0x0003
+        FOREGROUND_RED = 0x0004
+        FOREGROUND_MAGENTA = 0x0005
+        FOREGROUND_YELLOW = 0x0006
+        FOREGROUND_GREY = 0x0007
+        FOREGROUND_INTENSITY = 0x0008  # foreground color is intensified.
 
-        BACKGROUND_BLACK     = 0x0000
-        BACKGROUND_BLUE      = 0x0010
-        BACKGROUND_GREEN     = 0x0020
-        BACKGROUND_CYAN      = 0x0030
-        BACKGROUND_RED       = 0x0040
-        BACKGROUND_MAGENTA   = 0x0050
-        BACKGROUND_YELLOW    = 0x0060
-        BACKGROUND_GREY      = 0x0070
-        BACKGROUND_INTENSITY = 0x0080 # background color is intensified.
+        BACKGROUND_BLACK = 0x0000
+        BACKGROUND_BLUE = 0x0010
+        BACKGROUND_GREEN = 0x0020
+        BACKGROUND_CYAN = 0x0030
+        BACKGROUND_RED = 0x0040
+        BACKGROUND_MAGENTA = 0x0050
+        BACKGROUND_YELLOW = 0x0060
+        BACKGROUND_GREY = 0x0070
+        BACKGROUND_INTENSITY = 0x0080  # background color is intensified.
 
         levelno = args[1].levelno
-        if(levelno>=50):
+        if(levelno >= 50):
             # color = BACKGROUND_YELLOW | FOREGROUND_RED | FOREGROUND_INTENSITY | BACKGROUND_INTENSITY
             color = FOREGROUND_MAGENTA | FOREGROUND_INTENSITY
-        elif(levelno>=40):
+        elif(levelno >= 40):
             color = FOREGROUND_RED | FOREGROUND_INTENSITY
-        elif(levelno>=30):
+        elif(levelno >= 30):
             color = FOREGROUND_YELLOW | FOREGROUND_INTENSITY
-        elif(levelno>=20):
+        elif(levelno >= 20):
             color = FOREGROUND_GREEN
-        elif(levelno>=10):
+        elif(levelno >= 10):
             color = FOREGROUND_CYAN
         else:
-            color =  FOREGROUND_WHITE
+            color = FOREGROUND_WHITE
 
         args[0]._set_color(color)
 
         ret = fn(*args)
-        args[0]._set_color( FOREGROUND_WHITE )
+        args[0]._set_color(FOREGROUND_WHITE)
         return ret
     return new
+
 
 def add_coloring_to_emit_ansi(fn):
     # add methods we need to the class
     def new(*args):
         levelno = args[1].levelno
-        if(levelno>=50):
-            color = '\x1b[31m' # red
-        elif(levelno>=40):
-            color = '\x1b[31m' # red
-        elif(levelno>=30):
-            color = '\x1b[33m' # yellow
-        elif(levelno>=20):
-            color = '\x1b[32m' # green
-        elif(levelno>=10):
-            color = '\x1b[35m' # pink
+        if(levelno >= 50):
+            color = '\x1b[31m'  # red
+        elif(levelno >= 40):
+            color = '\x1b[31m'  # red
+        elif(levelno >= 30):
+            color = '\x1b[33m'  # yellow
+        elif(levelno >= 20):
+            color = '\x1b[32m'  # green
+        elif(levelno >= 10):
+            color = '\x1b[35m'  # pink
         else:
-            color = '\x1b[0m' # normal
-        args[1].msg = color + args[1].msg +  '\x1b[0m'  # normal
+            color = '\x1b[0m'  # normal
+        args[1].msg = color + args[1].msg + '\x1b[0m'  # normal
         # args[1].levelname = color + args[1].levelname +  '\x1b[0m'  # normal
 
-        #print "after"
+        # print "after"
         return fn(*args)
     return new
+
 
 def getLogger(name):
     return logging.getLogger(name)
@@ -118,36 +122,41 @@ def getLogger(name):
 #
 #     return logger
 
-def customLogger(name,fn=None,
-    file_format='%(asctime)s - %(levelname)s - %(message)s',
-    mode='a',level='DEBUG'):
+
+def customLogger(name, fn=None,
+                 file_format='%(asctime)s - %(levelname)s - %(message)s',
+                 mode='a', level='DEBUG', term_width=None):
     set()
     logger = logging.getLogger(name)
 
     if len(logger.handlers) == 0:
         stream_handler = logging.StreamHandler()
-        stream_handler.setFormatter(MyFormatter("%(message)s"))
+        stream_handler.setFormatter(MyFormatter(fmt="%(message)s", term_width=term_width))
 
-        if not fn is None:
-            fh = logging.FileHandler(fn,mode=mode)
-            fh.setFormatter(logging.Formatter('%(asctime)s - %(levelname)s - %(message)s'))
+        if fn is not None:
+            fh = logging.FileHandler(fn, mode=mode)
+            fh.setFormatter(logging.Formatter(
+                '%(asctime)s - %(levelname)s - %(message)s'))
             logger.addHandler(fh)
         logger.addHandler(stream_handler)
 
     logger.setLevel(level)
     return logger
 
+
 def set():
-    if platform.system()=='Windows':
+    if platform.system() == 'Windows':
         # Windows does not support ANSI escapes and we are using API calls to set the console color
-        logging.StreamHandler.emit = add_coloring_to_emit_windows(logging.StreamHandler.emit)
+        logging.StreamHandler.emit = add_coloring_to_emit_windows(
+            logging.StreamHandler.emit)
     else:
         # all non-Windows platforms are supporting ANSI escapes so we use them
-        logging.StreamHandler.emit = add_coloring_to_emit_ansi(logging.StreamHandler.emit)
-        #log = logging.getLogger()
-        #log.addFilter(log_filter())
-        #//hdlr = logging.StreamHandler()
-        #//hdlr.setFormatter(formatter())
+        logging.StreamHandler.emit = add_coloring_to_emit_ansi(
+            logging.StreamHandler.emit)
+        # log = logging.getLogger()
+        # log.addFilter(log_filter())
+        # //hdlr = logging.StreamHandler()
+        # //hdlr.setFormatter(formatter())
 
 
 '''
@@ -203,25 +212,40 @@ For example logger.debug('\tThis is a cool message\nSecond cool message long')
     message long
 
 '''
+
+
 class MyFormatter(logging.Formatter):
 
+    def __init__(self, *args, term_width=None, **kwargs):
+        super(MyFormatter, self).__init__(**kwargs)
 
+        self.term_width = term_width
 
-    #This function overwrites logging.Formatter.format
-    #We conver the msg into the overall format we want to see
-    def format(self,record):
+        # if term_width is None:
+        #     self.term_width = getTerminalSize()[0]
+        # else:
+        #     self.term_width = term_width
 
+    # This function overwrites logging.Formatter.format
+    # We conver the msg into the overall format we want to see
+    def format(self, record):
 
-        widths=[getTerminalSize()[0] - 12 ,10]
-        form='{row[0]:<{width[0]}} {row[1]:<{width[1]}}'
+        if self.term_width is None:
+            term_width = getTerminalSize()[0]
+        else:
+            term_width = self.term_width
 
-        #Instead of formatting...rewrite message as desired here
-        record.msg = self.Create_Columns(form,widths,[record.msg],["[%8s]"%record.levelname])
+        widths = [term_width - 12, 10]
+        form = '{row[0]:<{width[0]}} {row[1]:<{width[1]}}'
 
-        #Return basic formatter
-        return super(MyFormatter,self).format(record)
+        # Instead of formatting...rewrite message as desired here
+        record.msg = self.Create_Columns(form, widths, [record.msg], [
+                                         "[%8s]" % record.levelname])
 
-    def Create_Columns(self,format_str,widths,*columns):
+        # Return basic formatter
+        return super(MyFormatter, self).format(record)
+
+    def Create_Columns(self, format_str, widths, *columns):
         '''
         format_str describes the format of the report.
         {row[i]} is replaced by data from the ith element of columns.
@@ -234,58 +258,56 @@ class MyFormatter(logging.Formatter):
         Each list contains the data for one column of the report.
         formatter returns the report as one big string.
         '''
-        result=[]
+        result = []
         for row in zip(*columns):
 
-            #Create a indents for each row...
+            # Create a indents for each row...
             sub = []
 
-            #Loop through
+            # Loop through
             for r in row:
-                #Expand tabs to spaces to make our lives easier
+                # Expand tabs to spaces to make our lives easier
                 r = r.expandtabs()
 
-                #Find the leading spaces and create indend character
+                # Find the leading spaces and create indend character
                 if r.find(" ") == 0:
                     i = 0
                     for letters in r:
                         if not letters == " ":
                             break
                         i += 1
-                    sub.append(" "*i)
+                    sub.append(" " * i)
                 else:
                     sub.append("")
 
             # Per text wrap perserving the \n should be done with splitlines
             row = [x.splitlines() for x in row]
             lines = []
-            for elt,num,ind in zip(row,widths,sub):
+            for elt, num, ind in zip(row, widths, sub):
                 lt = []
 
-                for i,e in enumerate(elt):
+                for i, e in enumerate(elt):
 
-                    #Only set init_indent for non-first lines
-                    if i==0:
+                    # Only set init_indent for non-first lines
+                    if i == 0:
                         init = ''
                     else:
                         init = ind
-                    lt.extend(textwrap.wrap(e, width=num, initial_indent= init,subsequent_indent=ind))
+                    lt.extend(textwrap.wrap(e, width=num,
+                                            initial_indent=init, subsequent_indent=ind))
 
                 lines.append(lt)
-                
-            #Actually wrap and creat the string to return...stolen from internet
+
+            # Actually wrap and creat the string to return...stolen from internet
             # lines=[textwrap.wrap(elt, width=num, subsequent_indent=ind) for elt,num,ind in zip(row,widths,sub)]
 
             if six.PY2:
-                for line in itertools.izip_longest(*lines,fillvalue=''):
-                    result.append(format_str.format(width=widths,row=line))
+                for line in itertools.izip_longest(*lines, fillvalue=''):
+                    result.append(format_str.format(width=widths, row=line))
             elif six.PY3:
-                for line in itertools.zip_longest(*lines,fillvalue=''):
-                    result.append(format_str.format(width=widths,row=line))
+                for line in itertools.zip_longest(*lines, fillvalue=''):
+                    result.append(format_str.format(width=widths, row=line))
         return '\n'.join(result)
-
-
-
 
 
 '''
@@ -295,24 +317,26 @@ Author: Harco Kuppens
 Downloaded 2/21/14
 '''
 
+
 def getTerminalSize():
-   import platform
-   current_os = platform.system()
-   tuple_xy=None
-   if current_os == 'Windows':
-       tuple_xy = _getTerminalSize_windows()
-       if tuple_xy is None:
-          tuple_xy = _getTerminalSize_tput()
-          # needed for window's python in cygwin's xterm!
-   if current_os == 'Linux' or current_os == 'Darwin' or  current_os.startswith('CYGWIN'):
-       tuple_xy = _getTerminalSize_linux()
-   if tuple_xy is None:
-       print("default")
-       tuple_xy = (80, 25)      # default value
-   return tuple_xy
+    import platform
+    current_os = platform.system()
+    tuple_xy = None
+    if current_os == 'Windows':
+        tuple_xy = _getTerminalSize_windows()
+        if tuple_xy is None:
+            tuple_xy = _getTerminalSize_tput()
+            # needed for window's python in cygwin's xterm!
+    if current_os == 'Linux' or current_os == 'Darwin' or current_os.startswith('CYGWIN'):
+        tuple_xy = _getTerminalSize_linux()
+    if tuple_xy is None:
+        print("default")
+        tuple_xy = (80, 25)      # default value
+    return tuple_xy
+
 
 def _getTerminalSize_windows():
-    res=None
+    res = None
     try:
         from ctypes import windll, create_string_buffer
 
@@ -335,27 +359,34 @@ def _getTerminalSize_windows():
     else:
         return None
 
+
 def _getTerminalSize_tput():
     # get terminal width
     # src: http://stackoverflow.com/questions/263890/how-do-i-find-the-width-height-of-a-terminal-window
     try:
-       import subprocess
-       proc=subprocess.Popen(["tput", "cols"],stdin=subprocess.PIPE,stdout=subprocess.PIPE)
-       output=proc.communicate(input=None)
-       cols=int(output[0])
-       proc=subprocess.Popen(["tput", "lines"],stdin=subprocess.PIPE,stdout=subprocess.PIPE)
-       output=proc.communicate(input=None)
-       rows=int(output[0])
-       return (cols,rows)
+        import subprocess
+        proc = subprocess.Popen(
+            ["tput", "cols"], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+        output = proc.communicate(input=None)
+        cols = int(output[0])
+        proc = subprocess.Popen(
+            ["tput", "lines"], stdin=subprocess.PIPE, stdout=subprocess.PIPE)
+        output = proc.communicate(input=None)
+        rows = int(output[0])
+        return (cols, rows)
     except:
-       return None
+        return None
 
 
 def _getTerminalSize_linux():
     def ioctl_GWINSZ(fd):
         try:
-            import fcntl, termios, struct, os
-            cr = struct.unpack('hh', fcntl.ioctl(fd, termios.TIOCGWINSZ,'1234'))
+            import fcntl
+            import termios
+            import struct
+            import os
+            cr = struct.unpack('hh', fcntl.ioctl(
+                fd, termios.TIOCGWINSZ, '1234'))
         except:
             return None
         return cr
