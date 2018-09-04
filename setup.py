@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='colored_logger',
-      version='1.0.4',
+      version='1.0.5',
       description='Colored Logger for terminal',
       url='https://github.com/eskemojoe007/colored_logger',
       author='David Folkner',
