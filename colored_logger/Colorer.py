@@ -144,6 +144,26 @@ def customLogger(name, fn=None,
     return logger
 
 
+def setLevels(name=None, logger=None, level=None, file_level=None, stream_level=None):
+    if (name is None) and (logger is None):
+        return None
+    elif name is not None:
+        logger = logging.getLogger(name)
+
+    if level is not None:
+        logger.setLevel(level)
+        return logger
+
+    for handle in logger.handlers:
+        if type(handle) == logging.StreamHandler:
+            if stream_level is not None:
+                handle.setLevel(stream_level)
+        elif type(handle) == logging.FileHandler:
+            if file_level is not None:
+                handle.setLevel(file_level)
+    return logger
+
+
 def set():
     if platform.system() == 'Windows':
         # Windows does not support ANSI escapes and we are using API calls to set the console color
