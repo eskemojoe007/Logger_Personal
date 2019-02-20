@@ -2,134 +2,20 @@ import logging
 import textwrap
 import itertools
 import platform
-import six
 import copy
-'''
-Functions below: add_Coloring
-Author: http://stackoverflow.com/questions/384076/how-can-i-color-python-logging-output
-Author: Dave Sorin
-Downloaded 2/21/14
-Edited by D. Folkner to change some of the colors and how it is output.
-'''
-# now we patch Python code to add color support to logging.StreamHandler
-
-
-def add_coloring_to_emit_windows(fn):
-        # add methods we need to the class
-    def _out_handle(self):
-        import ctypes
-        return ctypes.windll.kernel32.GetStdHandle(self.STD_OUTPUT_HANDLE)
-    out_handle = property(_out_handle)
-
-    def _set_color(self, code):
-        import ctypes
-        # Constants from the Windows API
-        self.STD_OUTPUT_HANDLE = -11
-        hdl = ctypes.windll.kernel32.GetStdHandle(self.STD_OUTPUT_HANDLE)
-        ctypes.windll.kernel32.SetConsoleTextAttribute(hdl, code)
-
-    setattr(logging.StreamHandler, '_set_color', _set_color)
-
-    def new(*args):
-        FOREGROUND_BLUE = 0x0001  # text color contains blue.
-        FOREGROUND_GREEN = 0x0002  # text color contains green.
-        FOREGROUND_RED = 0x0004  # text color contains red.
-        FOREGROUND_INTENSITY = 0x0008  # text color is intensified.
-        FOREGROUND_WHITE = FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED
-        # winbase.h
-        STD_INPUT_HANDLE = -10
-        STD_OUTPUT_HANDLE = -11
-        STD_ERROR_HANDLE = -12
-
-        # wincon.h
-        FOREGROUND_BLACK = 0x0000
-        FOREGROUND_BLUE = 0x0001
-        FOREGROUND_GREEN = 0x0002
-        FOREGROUND_CYAN = 0x0003
-        FOREGROUND_RED = 0x0004
-        FOREGROUND_MAGENTA = 0x0005
-        FOREGROUND_YELLOW = 0x0006
-        FOREGROUND_GREY = 0x0007
-        FOREGROUND_INTENSITY = 0x0008  # foreground color is intensified.
-
-        BACKGROUND_BLACK = 0x0000
-        BACKGROUND_BLUE = 0x0010
-        BACKGROUND_GREEN = 0x0020
-        BACKGROUND_CYAN = 0x0030
-        BACKGROUND_RED = 0x0040
-        BACKGROUND_MAGENTA = 0x0050
-        BACKGROUND_YELLOW = 0x0060
-        BACKGROUND_GREY = 0x0070
-        BACKGROUND_INTENSITY = 0x0080  # background color is intensified.
-
-        levelno = args[1].levelno
-        if(levelno >= 50):
-            # color = BACKGROUND_YELLOW | FOREGROUND_RED | FOREGROUND_INTENSITY | BACKGROUND_INTENSITY
-            color = FOREGROUND_MAGENTA | FOREGROUND_INTENSITY
-        elif(levelno >= 40):
-            color = FOREGROUND_RED | FOREGROUND_INTENSITY
-        elif(levelno >= 30):
-            color = FOREGROUND_YELLOW | FOREGROUND_INTENSITY
-        elif(levelno >= 20):
-            color = FOREGROUND_GREEN
-        elif(levelno >= 10):
-            color = FOREGROUND_CYAN
-        else:
-            color = FOREGROUND_WHITE
-
-        args[0]._set_color(color)
-
-        ret = fn(*args)
-        args[0]._set_color(FOREGROUND_WHITE)
-        return ret
-    return new
-
-
-def add_coloring_to_emit_ansi(fn):
-    # add methods we need to the class
-    def new(*args):
-        levelno = args[1].levelno
-        if(levelno >= 50):
-            color = '\x1b[31m'  # red
-        elif(levelno >= 40):
-            color = '\x1b[31m'  # red
-        elif(levelno >= 30):
-            color = '\x1b[33m'  # yellow
-        elif(levelno >= 20):
-            color = '\x1b[32m'  # green
-        elif(levelno >= 10):
-            color = '\x1b[35m'  # pink
-        else:
-            color = '\x1b[0m'  # normal
-        args[1].msg = color + args[1].msg + '\x1b[0m'  # normal
-        # args[1].levelname = color + args[1].levelname +  '\x1b[0m'  # normal
-
-        # print "after"
-        return fn(*args)
-    return new
+import six
+import colorama
+import crayons
 
 
 def getLogger(name):
     return logging.getLogger(name)
 
-# def customLogger(name):
-#     set()
-#     logger = logging.getLogger(name)
-#     if not len(logger.handlers):
-#         logger_handler = logging.StreamHandler()
-#         logger_handler.setFormatter(MyFormatter("%(message)s"))
-#         logger.addHandler(logger_handler)
-#     logger.setLevel("DEBUG")
-#
-#     return logger
-
-
 def customLogger(name, fn=None,
                  file_format='%(asctime)s - %(levelname)s - %(message)s',
                  mode='a', level='DEBUG', term_width=None):
-    set()
+    init()
     logger = logging.getLogger(name)
-
     if len(logger.handlers) == 0:
         stream_handler = logging.StreamHandler()
         stream_handler.setFormatter(MyFormatter(
@@ -138,8 +24,8 @@ def customLogger(name, fn=None,
         if fn is not None:
             fh = logging.FileHandler(fn, mode=mode)
             fh.setFormatter(logging.Formatter(file_format))
-            logger.addHandler(fh)
         logger.addHandler(stream_handler)
+        logger.addHandler(fh)
 
     logger.setLevel(level)
     return logger
@@ -165,19 +51,8 @@ def setLevels(name=None, logger=None, level=None, file_level=None, stream_level=
     return logger
 
 
-def set():
-    if platform.system() == 'Windows':
-        # Windows does not support ANSI escapes and we are using API calls to set the console color
-        logging.StreamHandler.emit = add_coloring_to_emit_windows(
-            logging.StreamHandler.emit)
-    else:
-        # all non-Windows platforms are supporting ANSI escapes so we use them
-        logging.StreamHandler.emit = add_coloring_to_emit_ansi(
-            logging.StreamHandler.emit)
-        # log = logging.getLogger()
-        # log.addFilter(log_filter())
-        # //hdlr = logging.StreamHandler()
-        # //hdlr.setFormatter(formatter())
+def init():
+    colorama.init()
 
 
 '''
@@ -261,13 +136,29 @@ class MyFormatter(logging.Formatter):
 
         # Instead of formatting...rewrite message as desired here
         new_record = copy.deepcopy(record)
-        new_record.msg = self.Create_Columns(form, widths, [new_record.msg], [
+        new_record.msg = self.createColumns(form, widths, [new_record.msg], [
             "[%8s]" % new_record.levelname])
 
+        new_record = self.addColor(new_record)
         # Return basic formatter
         return super(MyFormatter, self).format(new_record)
 
-    def Create_Columns(self, format_str, widths, *columns):
+    @staticmethod
+    def addColor(record):
+        if record.levelno >= 50:
+            record.msg = crayons.magenta(record.msg, bold=True)
+        elif record.levelno >= 40:
+            record.msg = crayons.red(record.msg, bold=True)
+        elif record.levelno >= 30:
+            record.msg = crayons.yellow(record.msg, bold=True)
+        elif record.levelno >= 20:
+            record.msg = crayons.green(record.msg, bold=False)
+        elif record.levelno >= 10:
+            record.msg = crayons.cyan(record.msg, bold=False)
+        return record
+
+    @staticmethod
+    def createColumns(format_str, widths, *columns):
         '''
         format_str describes the format of the report.
         {row[i]} is replaced by data from the ith element of columns.
@@ -312,18 +203,15 @@ class MyFormatter(logging.Formatter):
 
                     # Only set init_indent for non-first lines
                     if i == 0:
-                        init = ''
+                        initial_indent = ''
                     else:
-                        init = ind
+                        initial_indent = ind
                     lt.extend(textwrap.wrap(e, width=num,
-                                            initial_indent=init, subsequent_indent=ind))
-
+                                            initial_indent=initial_indent, subsequent_indent=ind))
                 lines.append(lt)
 
-            # Actually wrap and creat the string to return...stolen from internet
-            # lines=[textwrap.wrap(elt, width=num, subsequent_indent=ind) for elt,num,ind in zip(row,widths,sub)]
-
             if six.PY2:
+                # pylint: disable=E1101
                 for line in itertools.izip_longest(*lines, fillvalue=''):
                     result.append(format_str.format(width=widths, row=line))
             elif six.PY3:
@@ -344,19 +232,19 @@ def getTerminalSize():
     current_os = platform.system()
     tuple_xy = None
     if current_os == 'Windows':
-        tuple_xy = _getTerminalSize_windows()
+        tuple_xy = _getTerminalSizeWindows()
         if tuple_xy is None:
-            tuple_xy = _getTerminalSize_tput()
+            tuple_xy = _getTerminalSizeTput()
             # needed for window's python in cygwin's xterm!
     if current_os == 'Linux' or current_os == 'Darwin' or current_os.startswith('CYGWIN'):
-        tuple_xy = _getTerminalSize_linux()
+        tuple_xy = _getTerminalSizeLinux()
     if tuple_xy is None:
         print("default")
         tuple_xy = (80, 25)      # default value
     return tuple_xy
 
 
-def _getTerminalSize_windows():
+def _getTerminalSizeWindows():
     res = None
     try:
         from ctypes import windll, create_string_buffer
@@ -381,7 +269,7 @@ def _getTerminalSize_windows():
         return None
 
 
-def _getTerminalSize_tput():
+def _getTerminalSizeTput():
     # get terminal width
     # src: http://stackoverflow.com/questions/263890/how-do-i-find-the-width-height-of-a-terminal-window
     try:
@@ -399,7 +287,7 @@ def _getTerminalSize_tput():
         return None
 
 
-def _getTerminalSize_linux():
+def _getTerminalSizeLinux():
     def ioctl_GWINSZ(fd):
         try:
             import fcntl

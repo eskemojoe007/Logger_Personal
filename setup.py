@@ -9,6 +9,8 @@ setup(name='colored_logger',
       license='MIT',
       packages=['colored_logger'],
       install_requires=[
-        'six'
+        'six',
+        'colorama',
+        'crayons'
         ],
       zip_safe=False)
