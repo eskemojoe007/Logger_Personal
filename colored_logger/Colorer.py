@@ -132,7 +132,8 @@ def customLogger(name, fn=None,
 
     if len(logger.handlers) == 0:
         stream_handler = logging.StreamHandler()
-        stream_handler.setFormatter(MyFormatter(fmt="%(message)s", term_width=term_width))
+        stream_handler.setFormatter(MyFormatter(
+            fmt="%(message)s", term_width=term_width))
 
         if fn is not None:
             fh = logging.FileHandler(fn, mode=mode)
@@ -261,7 +262,7 @@ class MyFormatter(logging.Formatter):
         # Instead of formatting...rewrite message as desired here
         new_record = copy.deepcopy(record)
         new_record.msg = self.Create_Columns(form, widths, [new_record.msg], [
-                                         "[%8s]" % new_record.levelname])
+            "[%8s]" % new_record.levelname])
 
         # Return basic formatter
         return super(MyFormatter, self).format(new_record)
@@ -340,7 +341,6 @@ Downloaded 2/21/14
 
 
 def getTerminalSize():
-    import platform
     current_os = platform.system()
     tuple_xy = None
     if current_os == 'Windows':
