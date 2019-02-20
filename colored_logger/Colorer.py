@@ -3,6 +3,7 @@ import textwrap
 import itertools
 import platform
 import six
+import copy
 '''
 Functions below: add_Coloring
 Author: http://stackoverflow.com/questions/384076/how-can-i-color-python-logging-output
@@ -135,8 +136,7 @@ def customLogger(name, fn=None,
 
         if fn is not None:
             fh = logging.FileHandler(fn, mode=mode)
-            fh.setFormatter(logging.Formatter(
-                '%(asctime)s - %(levelname)s - %(message)s'))
+            fh.setFormatter(logging.Formatter(file_format))
             logger.addHandler(fh)
         logger.addHandler(stream_handler)
 
@@ -259,11 +259,12 @@ class MyFormatter(logging.Formatter):
         form = '{row[0]:<{width[0]}} {row[1]:<{width[1]}}'
 
         # Instead of formatting...rewrite message as desired here
-        record.msg = self.Create_Columns(form, widths, [record.msg], [
-                                         "[%8s]" % record.levelname])
+        new_record = copy.deepcopy(record)
+        new_record.msg = self.Create_Columns(form, widths, [new_record.msg], [
+                                         "[%8s]" % new_record.levelname])
 
         # Return basic formatter
-        return super(MyFormatter, self).format(record)
+        return super(MyFormatter, self).format(new_record)
 
     def Create_Columns(self, format_str, widths, *columns):
         '''
