@@ -26,6 +26,9 @@ def main():
     logger.warning('main - warning')
     logger.error('main - error')
     logger.critical('main - critical')
+    cool = 'substitute String'
+    logger.warning('Default - %s', cool)
+    logger.warning('\tBuilt in string.  %s %s %s', 'Sentence 2.', 'Sentence 3.', 'Super de duper long sentence 4....')
     MyModule()
 
 

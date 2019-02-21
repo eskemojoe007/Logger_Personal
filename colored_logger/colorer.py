@@ -136,7 +136,12 @@ class MyFormatter(logging.Formatter):
 
         # Instead of formatting...rewrite message as desired here
         new_record = copy.deepcopy(record)
-        new_record.msg = self.createColumns(form, widths, [new_record.msg], [
+
+        # We need to consume the message here otherwise we get some wonky behavior
+        total_message = new_record.getMessage()
+        new_record.args = ()
+
+        new_record.msg = self.createColumns(form, widths, [total_message], [
             "[%8s]" % new_record.levelname])
 
         new_record = self.addColor(new_record)
