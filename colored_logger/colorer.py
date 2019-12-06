@@ -112,15 +112,12 @@ For example logger.debug('\tThis is a cool message\nSecond cool message long')
 
 class MyFormatter(logging.Formatter):
 
-    def __init__(self, *args, term_width=None, **kwargs):
+    def __init__(self, *args, **kwargs):
+        self.term_width = kwargs.pop('term_width', None)
+
         super(MyFormatter, self).__init__(**kwargs)
 
-        self.term_width = term_width
-
-        # if term_width is None:
-        #     self.term_width = getTerminalSize()[0]
-        # else:
-        #     self.term_width = term_width
+        # self.term_width = term_width
 
     # This function overwrites logging.Formatter.format
     # We conver the msg into the overall format we want to see
